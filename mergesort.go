@@ -1,6 +1,7 @@
 package mergesort
 
 import (
+	"runtime"
 	"sync"
 )
 
@@ -53,19 +54,45 @@ func parallelMergesortHandler(s []int, parent *sync.WaitGroup) {
 		if len <= max { // Sequential
 			mergesort(s)
 		} else { // Parallel
+			middle := len / 2
+
 			var wg sync.WaitGroup
 			wg.Add(2)
 
-			middle := len/2 - 1
-
 			go parallelMergesortHandler(s[:middle], &wg)
-			go parallelMergesortHandler(s[middle+1:], &wg)
+			go parallelMergesortHandler(s[middle:], &wg)
 
 			wg.Wait()
+			merge(s, middle)
 		}
 	}
 
 	if parent != nil {
 		parent.Done()
+	}
+}
+
+func parallelMergesortWithChannel(s []int) {
+	cores := runtime.NumCPU()
+
+	ch := make(chan []int)
+
+	for i := 0; i < cores; i++ {
+		go parallelMergesortWithChannelHandler(ch)
+	}
+
+	ch <- s
+}
+
+func parallelMergesortWithChannelHandler(ch chan []int) {
+	for s := range ch {
+		len := len(s)
+
+		if len > 1 {
+			middle := len/2 - 1
+
+			ch <- s[:middle]
+			ch <- s[middle+1:]
+		}
 	}
 }
