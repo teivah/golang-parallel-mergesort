@@ -46,7 +46,7 @@ func BenchmarkParallelMergesort(b *testing.B) {
 
 func BenchmarkParallelMergesortWithChannel(b *testing.B) {
 	ch := initParallelMergesortWithChannel()
-	//defer close(ch)
+	defer close(ch)
 
 	for i := 0; i < b.N; i++ {
 		s := random(size)

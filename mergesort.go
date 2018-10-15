@@ -64,7 +64,7 @@ func parallelMergesortHandler(s []int, parent *sync.WaitGroup) {
 			wg.Add(2)
 
 			go parallelMergesortHandler(s[:middle], &wg)
-			go parallelMergesortHandler(s[middle:], &wg)
+			parallelMergesortHandler(s[middle:], &wg)
 
 			wg.Wait()
 			merge(s, middle)
