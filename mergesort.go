@@ -1,11 +1,10 @@
 package mergesort
 
 import (
-	"runtime"
 	"sync"
 )
 
-const max = 1 << 13
+const max = 1 << 11
 
 func merge(s []int, middle int) {
 	helper := make([]int, len(s))
@@ -45,13 +44,13 @@ func mergesort(s []int) {
 	}
 }
 
-/* Parallel */
+/* Parallel 1 */
 
-func parallelMergesort(s []int) {
-	parallelMergesortHandler(s, nil)
+func parallelMergesort1(s []int) {
+	parallelMergesortHandler1(s, nil)
 }
 
-func parallelMergesortHandler(s []int, parent *sync.WaitGroup) {
+func parallelMergesortHandler1(s []int, parent *sync.WaitGroup) {
 	len := len(s)
 
 	if len > 1 {
@@ -63,8 +62,8 @@ func parallelMergesortHandler(s []int, parent *sync.WaitGroup) {
 			var wg sync.WaitGroup
 			wg.Add(2)
 
-			go parallelMergesortHandler(s[:middle], &wg)
-			parallelMergesortHandler(s[middle:], &wg)
+			go parallelMergesortHandler1(s[:middle], &wg)
+			go parallelMergesortHandler1(s[middle:], &wg)
 
 			wg.Wait()
 			merge(s, middle)
@@ -76,66 +75,60 @@ func parallelMergesortHandler(s []int, parent *sync.WaitGroup) {
 	}
 }
 
-/* Parallel with channels */
+/* Parallel 2 */
 
-type Data struct {
-	s  []int
-	wg *sync.WaitGroup
+func parallelMergesort2(s []int) {
+	parallelMergesortHandler2(s, nil)
 }
 
-func initParallelMergesortWithChannel() chan Data {
-	cores := runtime.NumCPU()
+func parallelMergesortHandler2(s []int, parent *sync.WaitGroup) {
+	len := len(s)
 
-	ch := make(chan Data, 1024)
+	if len > 1 {
+		if len <= max { // Sequential
+			mergesort(s)
+		} else { // Parallel
+			middle := len / 2
 
-	for i := 0; i < cores; i++ {
-		go parallelMergesortWithChannelHandler(ch)
-	}
+			var wg sync.WaitGroup
+			wg.Add(1)
 
-	return ch
-}
+			go parallelMergesortHandler2(s[:middle], &wg)
+			parallelMergesortHandler2(s[middle:], nil)
 
-func parallelMergesortWithChannel(ch chan Data, s []int) {
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	ch <- Data{
-		s:  s,
-		wg: &wg,
-	}
-
-	wg.Wait()
-}
-
-func parallelMergesortWithChannelHandler(ch chan Data) {
-	for data := range ch {
-		s := data.s
-		len := len(s)
-
-		if len > 1 {
-			if len <= max { // Sequential
-				mergesort(s)
-			} else { // Parallel
-				middle := len / 2
-
-				var wg sync.WaitGroup
-				wg.Add(2)
-
-				ch <- Data{
-					s:  s[:middle],
-					wg: &wg,
-				}
-
-				ch <- Data{
-					s:  s[middle:],
-					wg: &wg,
-				}
-
-				wg.Wait()
-				merge(s, middle)
-			}
+			wg.Wait()
+			merge(s, middle)
 		}
+	}
 
-		data.wg.Done()
+	if parent != nil {
+		parent.Done()
+	}
+}
+
+/* Parallel 3 */
+
+func parallelMergesort3(s []int) {
+	parallelMergesortHandler3(s, nil)
+}
+
+func parallelMergesortHandler3(s []int, parent *sync.WaitGroup) {
+	len := len(s)
+
+	if len > 1 {
+		middle := len / 2
+
+		var wg sync.WaitGroup
+		wg.Add(2)
+
+		go parallelMergesortHandler3(s[:middle], &wg)
+		go parallelMergesortHandler3(s[middle:], &wg)
+
+		wg.Wait()
+		merge(s, middle)
+	}
+
+	if parent != nil {
+		parent.Done()
 	}
 }

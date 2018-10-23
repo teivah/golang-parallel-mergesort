@@ -13,16 +13,21 @@ func TestMergesort(t *testing.T) {
 	assert.Equal(t, []int{0, 1, 5, 5, 6, 8, 9, 10}, s)
 }
 
-func TestParallelMergesort(t *testing.T) {
+func TestParallelMergesort1(t *testing.T) {
 	s := []int{5, 8, 9, 5, 0, 10, 1, 6}
-	parallelMergesort(s)
+	parallelMergesort1(s)
 	assert.Equal(t, []int{0, 1, 5, 5, 6, 8, 9, 10}, s)
 }
 
-func TestParallelMergesortWithChannel(t *testing.T) {
+func TestParallelMergesort2(t *testing.T) {
 	s := []int{5, 8, 9, 5, 0, 10, 1, 6}
-	ch := initParallelMergesortWithChannel()
-	parallelMergesortWithChannel(ch, s)
+	parallelMergesort2(s)
+	assert.Equal(t, []int{0, 1, 5, 5, 6, 8, 9, 10}, s)
+}
+
+func TestParallelMergesort3(t *testing.T) {
+	s := []int{5, 8, 9, 5, 0, 10, 1, 6}
+	parallelMergesort3(s)
 	assert.Equal(t, []int{0, 1, 5, 5, 6, 8, 9, 10}, s)
 }
 
@@ -35,21 +40,29 @@ func BenchmarkMergesort(b *testing.B) {
 	}
 }
 
-func BenchmarkParallelMergesort(b *testing.B) {
+func BenchmarkParallelMergesort1(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		s := random(size)
 		b.StartTimer()
-		parallelMergesort(s)
+		parallelMergesort1(s)
 		b.StopTimer()
 	}
 }
 
-func BenchmarkParallelMergesortWithChannel(b *testing.B) {
-	ch := initParallelMergesortWithChannel()
-	defer close(ch)
-
+func BenchmarkParallelMergesort2(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		s := random(size)
-		parallelMergesortWithChannel(ch, s)
+		b.StartTimer()
+		parallelMergesort2(s)
+		b.StopTimer()
+	}
+}
+
+func BenchmarkParallelMergesort3(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		s := random(size)
+		b.StartTimer()
+		parallelMergesort3(s)
+		b.StopTimer()
 	}
 }
