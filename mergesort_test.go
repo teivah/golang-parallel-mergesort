@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-const size = 100000
+const size = 1000000
 
 func TestMergesort(t *testing.T) {
 	s := []int{5, 8, 9, 5, 0, 10, 1, 6}

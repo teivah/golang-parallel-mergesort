@@ -47,10 +47,6 @@ func mergesort(s []int) {
 /* Parallel 1 */
 
 func parallelMergesort1(s []int) {
-	parallelMergesortHandler1(s, nil)
-}
-
-func parallelMergesortHandler1(s []int, parent *sync.WaitGroup) {
 	len := len(s)
 
 	if len > 1 {
@@ -62,26 +58,25 @@ func parallelMergesortHandler1(s []int, parent *sync.WaitGroup) {
 			var wg sync.WaitGroup
 			wg.Add(2)
 
-			go parallelMergesortHandler1(s[:middle], &wg)
-			go parallelMergesortHandler1(s[middle:], &wg)
+			go func() {
+				defer wg.Done()
+				parallelMergesort1(s[:middle])
+			}()
+
+			go func() {
+				defer wg.Done()
+				parallelMergesort1(s[middle:])
+			}()
 
 			wg.Wait()
 			merge(s, middle)
 		}
-	}
-
-	if parent != nil {
-		parent.Done()
 	}
 }
 
 /* Parallel 2 */
 
 func parallelMergesort2(s []int) {
-	parallelMergesortHandler2(s, nil)
-}
-
-func parallelMergesortHandler2(s []int, parent *sync.WaitGroup) {
 	len := len(s)
 
 	if len > 1 {
@@ -93,26 +88,22 @@ func parallelMergesortHandler2(s []int, parent *sync.WaitGroup) {
 			var wg sync.WaitGroup
 			wg.Add(1)
 
-			go parallelMergesortHandler2(s[:middle], &wg)
-			parallelMergesortHandler2(s[middle:], nil)
+			go func() {
+				defer wg.Done()
+				parallelMergesort2(s[:middle])
+			}()
+
+			parallelMergesort2(s[middle:])
 
 			wg.Wait()
 			merge(s, middle)
 		}
-	}
-
-	if parent != nil {
-		parent.Done()
 	}
 }
 
 /* Parallel 3 */
 
 func parallelMergesort3(s []int) {
-	parallelMergesortHandler3(s, nil)
-}
-
-func parallelMergesortHandler3(s []int, parent *sync.WaitGroup) {
 	len := len(s)
 
 	if len > 1 {
@@ -121,14 +112,17 @@ func parallelMergesortHandler3(s []int, parent *sync.WaitGroup) {
 		var wg sync.WaitGroup
 		wg.Add(2)
 
-		go parallelMergesortHandler3(s[:middle], &wg)
-		go parallelMergesortHandler3(s[middle:], &wg)
+		go func() {
+			defer wg.Done()
+			parallelMergesort3(s[:middle])
+		}()
+
+		go func() {
+			defer wg.Done()
+			parallelMergesort3(s[middle:])
+		}()
 
 		wg.Wait()
 		merge(s, middle)
-	}
-
-	if parent != nil {
-		parent.Done()
 	}
 }
